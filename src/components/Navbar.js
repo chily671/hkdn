@@ -27,7 +27,7 @@ const Navbar = () => {
       if (result.success) {
         toast.success("Đăng nhập thành công!");
         setOpen(false);
-        router.push("/");
+        window.location.reload("/"); // Tải lại trang để cập nhật trạng thái đăng nhập
       }
     } else {
       const res = await register(email, password, username);
@@ -41,13 +41,11 @@ const Navbar = () => {
   };
   return (
     <nav className="w-full flex justify-between items-center py-4 px-6 bg-white shadow-md mb-10">
-      
-
       {loading ? (
         <p>Đang tải...</p> // ✅ Có thể thay bằng Skeleton hoặc dấu `...`
       ) : !isLogin ? (
         <div className="flex space-x-4 p-4 justify-end">
-          <h1 className="text-2xl font-bold">Hào khí Đồng Nai 2025 - Trảng Bom</h1>
+          <h1 className="text-2xl font-bold">Hào khí Đồng Nai 2025</h1>
           <Button
             variant="outline"
             onClick={() => handleOpen("login")}
@@ -55,9 +53,9 @@ const Navbar = () => {
           >
             Đăng nhập
           </Button>
-          <Button onClick={() => handleOpen("register")} className="mr-3">
+          {/* <Button onClick={() => handleOpen("register")} className="mr-3">
             Đăng ký
-          </Button>
+          </Button> */}
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>
@@ -99,15 +97,26 @@ const Navbar = () => {
           </Dialog>
         </div>
       ) : (
-        <Button
-          onClick={() => {
-            logout();
-            router.push("/");
-          }}
-          className="bg-red-500"
-        >
-          Đăng xuất
-        </Button>
+        <div className="flex space-x-4 p-4 justify-end">
+          <h1 className="text-2xl font-bold">HKDN - 2525</h1>
+          {/* <Button
+            variant="outline"
+            onClick={() => router.push("/")}
+            className="mr-3"
+          >
+            Tổng quan
+          </Button> */}
+
+          <Button
+            onClick={() => {
+              logout();
+              router.push("/");
+            }}
+            className="bg-red-500"
+          >
+            Đăng xuất
+          </Button>
+        </div>
       )}
     </nav>
   );

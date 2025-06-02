@@ -31,14 +31,7 @@ export async function POST(req) {
       password: hashedPassword,
       role: "user", // Mặc định là user
       createdAt: new Date(),
-      quizzes: [
-        {
-          quizId: null,
-          subject: null,
-          score: 0,
-          cancel: 0,
-        },
-      ],
+      cancel: 0,
     };
 
     const result = await User.insertOne(newUser);
@@ -46,13 +39,9 @@ export async function POST(req) {
       success: true,
       message: "Đăng ký thành công!",
       data: newUser, // Không có `result.ops[0]` vì MongoDB driver mới không trả về `ops`
-      token: jwt.sign(
-        { userId: newUser._id },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: "7d",
-        }
-      ),
+      token: jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
+        expiresIn: "7d",
+      }),
     });
   } catch (error) {
     console.error("Lỗi khi đăng ký:", error);

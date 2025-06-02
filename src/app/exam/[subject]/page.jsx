@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import CountdownTimer from "@/components/CountdownTimer";
 import QuestionCard from "@/components/QuestionCard";
 import { useRouter } from "next/navigation";
 import ConfirmPopup from "@/components/ConfirmPopup";
 
 export default function QuizPage({ params }) {
-  const { subject } = use(params);
+  const { subject } = params;
+
   const router = useRouter();
   const [started, setStarted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -20,8 +21,6 @@ export default function QuizPage({ params }) {
     van: "Văn",
     tienganh: "Tiếng Anh",
   }[subject];
-
-  
 
   // get questions from server
   const [questions, setQuestions] = useState([]);
@@ -55,9 +54,38 @@ export default function QuizPage({ params }) {
     return score;
   };
 
-  const handleSubmit = () => {
-    calculateScore();
-    setSubmitted(true);
+  const saveScore = async (score) => {
+    console;
+    const res = await fetch("/api/user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        subject,
+        score,
+        email: user?.email,
+        submittedAt: new Date(),
+      }),
+    });
+    if (!res.ok) {
+      throw new Error("Failed to save score");
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const score = calculateScore(); // lưu điểm vào biến
+
+      setSubmitted(true); // cập nhật UI
+
+      await saveScore(score); // đợi lưu điểm
+
+      console.log("✅ Score submitted:", score); // DEBUG
+    } catch (err) {
+      console.error("❌ Error submitting score:", err); // DEBUG
+      alert("Có lỗi khi lưu điểm. Vui lòng thử lại."); // feedback người dùng
+    }
   };
 
   const handleBackHome = () => {
@@ -72,7 +100,7 @@ export default function QuizPage({ params }) {
           onClick={() => setShowConfirm(true)}
           className="mt-6 px-4 py-2 bg-gray-500 text-white rounded-xl"
         >
-          Quay lại 
+          Quay lại
         </button>
       )}
       {!started && (
@@ -102,7 +130,7 @@ export default function QuizPage({ params }) {
           </div>
           {!submitted && (
             <button
-              onClick={handleSubmit}
+              onClick={() => handleSubmit()}
               className="mt-6 px-4 py-2 bg-green-600 text-white rounded-xl"
             >
               Nộp bài
@@ -133,7 +161,6 @@ export default function QuizPage({ params }) {
         onConfirm={() => {
           // Logic quay lại, có thể là router.back() hoặc chuyển trang
           router.push("/");
-          
         }}
       />
     </div>

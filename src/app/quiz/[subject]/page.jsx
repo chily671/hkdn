@@ -5,6 +5,9 @@ import CountdownTimer from "@/components/CountdownTimer";
 import QuestionCard from "@/components/QuestionCard";
 import { useRouter } from "next/navigation";
 import ConfirmPopup from "@/components/ConfirmPopup";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { TbRefresh } from "react-icons/tb";
 
 export default function QuizPage({ params }) {
   const { subject } = use(params);
@@ -13,6 +16,8 @@ export default function QuizPage({ params }) {
   const [submitted, setSubmitted] = useState(false);
   const [userAnswers, setUserAnswers] = useState({});
   const [showConfirm, setShowConfirm] = useState(false);
+  const [cancel, setCancel] = useState(false);
+  const { user } = useAuth();
 
   const title = {
     kienthucchung: "Kiến thức chung",
@@ -20,8 +25,6 @@ export default function QuizPage({ params }) {
     van: "Văn",
     tienganh: "Tiếng Anh",
   }[subject];
-
-  
 
   // get questions from server
   const [questions, setQuestions] = useState([]);
@@ -54,31 +57,82 @@ export default function QuizPage({ params }) {
     }
     return score;
   };
+  const saveScore = async (score) => {
+    const res = await fetch("/api/user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        score,
+        email: user?.email,
+        submittedAt: new Date(),
+      }),
+    });
+    if (!res.ok) {
+      throw new Error("Failed to save score");
+    }
+  };
 
-  const handleSubmit = () => {
-    calculateScore();
-    setSubmitted(true);
+  const handleCancel = async () => {
+    try {
+      setCancel(true);
+      await fetch("/api/user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          cancel,
+          email: user?.email,
+        }),
+      });
+      console.log("✅ Cancel recorded");
+      window.location.href = "/";
+    } catch (err) {
+      console.error("❌ Error recording cancel:", err);
+      alert("Có lỗi khi ghi nhận hủy thi. Vui lòng thử lại.");
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const score = calculateScore(); // lưu điểm vào biến
+      setSubmitted(true); // cập nhật UI
+      await saveScore(score); // đợi lưu điểm
+      toast.success("Điểm của bạn đã được lưu thành công!"); // thông báo thành công
+    } catch (err) {
+      alert("Có lỗi khi lưu điểm. Vui lòng thử lại."); // feedback người dùng
+    }
   };
 
   const handleBackHome = () => {
-    router.push("/");
+    window.location.href = "/";
   };
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Môn thi: {title}</h1>
-      {!submitted && (
-        <button
-          onClick={() => setShowConfirm(true)}
-          className="mt-6 px-4 py-2 bg-gray-500 text-white rounded-xl"
-        >
-          Quay lại 
-        </button>
-      )}
+      {!submitted &&
+        (started ? (
+          <button
+            onClick={() => setShowConfirm(true)}
+            className="mt-6 px-4 py-2 bg-gray-500 text-white rounded-xl cursor-pointer hover:bg-gray-600 transition-colors duration-200 ease-in-out"
+          >
+            Quay lại
+          </button>
+        ) : (
+          <button
+            onClick={() => handleBackHome()}
+            className="mt-6 px-4 py-2 bg-gray-500 text-white rounded-xl cursor-pointer hover:bg-gray-600 transition-colors duration-200 ease-in-out"
+          >
+            Quay lại
+          </button>
+        ))}
       {!started && (
         <button
           onClick={() => setStarted(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-xl ml-3"
+          className="px-4 py-2 bg-blue-600 text-white rounded-xl ml-3 cursor-pointer hover:bg-blue-700 transition-colors duration-200 ease-in-out"
         >
           Bắt đầu làm bài
         </button>
@@ -103,7 +157,7 @@ export default function QuizPage({ params }) {
           {!submitted && (
             <button
               onClick={handleSubmit}
-              className="mt-6 px-4 py-2 bg-green-600 text-white rounded-xl"
+              className="mt-6 px-4 py-2 bg-green-600 text-white rounded-xl cursor-pointer hover:bg-green-700 transition-colors duration-200 ease-in-out"
             >
               Nộp bài
             </button>
@@ -121,9 +175,22 @@ export default function QuizPage({ params }) {
           </p>
           <button
             onClick={handleBackHome}
-            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-xl"
+            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-xl cursor-pointer hover:bg-blue-700 transition-colors duration-200 ease-in-out"
           >
             về trang chủ
+          </button>
+          <button
+          
+            onClick={() => {
+              setStarted(false);
+              setSubmitted(false);
+              setUserAnswers({});
+              setShowConfirm(false);
+            }}
+            className="ml-3 px-4 py-2 bg-gray-500 text-white rounded-xl cursor-pointer"
+          >
+            <TbRefresh className="inline mr-2" />
+            Làm lại
           </button>
         </div>
       )}
@@ -131,9 +198,7 @@ export default function QuizPage({ params }) {
         isOpen={showConfirm}
         onCancel={() => setShowConfirm(false)}
         onConfirm={() => {
-          // Logic quay lại, có thể là router.back() hoặc chuyển trang
-          router.push("/");
-          
+          handleCancel();
         }}
       />
     </div>

@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
+import { Toaster } from 'sonner';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +28,18 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <Navbar />
           <div className="container mx-auto px-4">{children}</div>
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton={false}
+            toastOptions={{
+              className: "bg-white text-black shadow-lg",
+              style: {
+                background: "#fff",
+                color: "#000",
+              },
+            }}
+          />
         </AuthProvider>
       </body>
     </html>

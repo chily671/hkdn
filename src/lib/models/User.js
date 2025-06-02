@@ -6,15 +6,13 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: "user" }, // user, admin
-    quizzes: [
+    info: [
       {
-        quizId: { type: mongoose.Schema.Types.ObjectId, ref: "Quiz" },
-        subject: { type: String, required: true },
-        score: { type: Number, default: 0 },
+        score: { type: Number },
         submittedAt: { type: Date, default: Date.now },
-        cancel: { type: Number, default: 0 },
       },
     ],
+    cancel: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
